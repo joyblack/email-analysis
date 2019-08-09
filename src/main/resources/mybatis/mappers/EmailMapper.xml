@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.EmailMapper" >
+    <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.Email" >
+    <id column="email_id" property="emailId" jdbcType="BIGINT" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="email_subject" property="emailSubject" jdbcType="VARCHAR" />
+    <result column="from_address" property="fromAddress" jdbcType="VARCHAR" />
+    <result column="from_name" property="fromName" jdbcType="VARCHAR" />
+    <result column="to_address" property="toAddress" jdbcType="VARCHAR" />
+    <result column="from_ip" property="fromIp" jdbcType="VARCHAR" />
+    <result column="to_name" property="toName" jdbcType="VARCHAR" />
+    <result column="is_new" property="isNew" jdbcType="INTEGER" />
+     <result column="is_warning" property="isWarning" jdbcType="INTEGER" />
+    <result column="send_time" property="sendTime" jdbcType="TIMESTAMP" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="need_reply" property="needReply" jdbcType="INTEGER" />
+    <result column="text_content" property="textContent" jdbcType="VARCHAR" />
+    <result column="html_content" property="htmlContent" jdbcType="VARCHAR" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="store_path" property="storePath" jdbcType="VARCHAR" />
+    <result column="file_protocol" property="fileProtocol" jdbcType="VARCHAR" />
+    <result column="file_size" property="fileSize" jdbcType="BIGINT" />
+    <result column="old_file_name" property="oldFileName" jdbcType="VARCHAR" />
+    <result column="new_file_name" property="newFileName" jdbcType="VARCHAR" />
+
+  </resultMap>
+  <sql id="Base_Column_List" >
+    email_id, case_id, email_subject, from_address, from_name, to_name, to_address, is_new, send_time,from_ip,
+    create_time, need_reply, message_id, text_content, html_content, file_name, file_protocol, store_path, file_size, old_file_name, new_file_name, is_warning
+  </sql>
+
+  <sql id="email_list_column" >
+        email_id as emailId,
+        case_id as caseId,
+        email_subject as emailSubject,
+        from_address as fromAddress,
+        from_name as fromName,
+        to_address as toAddress,
+        to_name as toName,
+        from_ip as fromIp,
+        old_file_name as oldFileName,
+        new_file_name as newFileName,
+        DATE_FORMAT(send_time, "%Y-%m-%d %H:%i") as sendTime,
+        DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+        is_warning as isWarning
+  </sql>
+    <!-- query basic -->
+    <select id="getEmailListCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ea_email
+        <where>
+            <if test="data.caseId != null">
+                AND case_id = #{data.caseId}
+            </if>
+            <if test="data.isWarning != null">
+                AND is_warning = #{data.isWarning}
+            </if>
+            <if test="data.subject != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (email_subject = #{data.subject})
+                    </when>
+                    <otherwise>
+                        AND (email_subject LIKE CONCAT('%',#{data.subject},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+
+            <if test="data.sendTimeStart != null">
+                AND (send_time >= #{data.sendTimeStart})
+            </if>
+
+            <if test="data.sendTimeEnd != null">
+                AND (send_time &lt;= #{data.sendTimeEnd})
+            </if>
+
+            <if test="data.fromIp != null">
+                AND (from_ip = #{data.fromIp})
+            </if>
+
+            <if test="data.from != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (from_address = #{data.from} || from_name = #{data.from})
+                    </when>
+                    <otherwise>
+                        AND (from_address LIKE CONCAT('%',#{data.from},'%') || from_name LIKE CONCAT('%',#{data.from},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+
+            <if test="data.to != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (to_address = #{data.to} || to_name = #{data.to})
+                    </when>
+                    <otherwise>
+                        AND (to_address LIKE CONCAT('%',#{data.to},'%') || to_name LIKE CONCAT('%',#{data.to},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+
+
+        </where>
+    </select>
+
+
+  <select id="getEmailList" resultType="java.util.HashMap">
+      <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        SELECT
+        <include refid="email_list_column" />
+        FROM ea_email
+        <where>
+            <if test="data.caseId != null">
+                AND case_id = #{data.caseId}
+            </if>
+
+            <if test="data.isWarning != null">
+                AND is_warning = #{data.isWarning}
+            </if>
+
+            <if test="data.subject != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (email_subject = #{data.subject})
+                    </when>
+                    <otherwise>
+                        AND (email_subject LIKE CONCAT('%',#{data.subject},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+
+            <if test="data.sendTimeStart != null">
+                AND (send_time >= #{data.sendTimeStart})
+            </if>
+
+            <if test="data.sendTimeEnd != null">
+                AND (send_time &lt;= #{data.sendTimeEnd})
+            </if>
+
+            <if test="data.fromIp != null">
+                AND (from_ip = #{data.fromIp})
+            </if>
+
+            <if test="data.from != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (from_address = #{data.from} || from_name = #{data.from})
+                    </when>
+                    <otherwise>
+                        AND (from_address LIKE CONCAT('%',#{data.from},'%') || from_name LIKE CONCAT('%',#{data.from},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+
+            <if test="data.to != null">
+                <choose>
+                    <when test="data.isExact == 1">
+                        AND (to_address = #{data.to} || to_name = #{data.to})
+                    </when>
+                    <otherwise>
+                        AND (to_address LIKE CONCAT('%',#{data.to},'%') || to_name LIKE CONCAT('%',#{data.to},'%'))
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+      <if test="data.pagination.sort != null">
+        ORDER BY
+        <choose>
+          <when test="data.pagination.sort == 'emailSubject'">emailSubject</when>
+          <when test="data.pagination.sort == 'caseId'">caseId</when>
+          <when test="data.pagination.sort == 'fromAddress'">fromAddress</when>
+          <when test="data.pagination.sort == 'fromName'">fromName</when>
+          <when test="data.pagination.sort == 'toAddress'">toAddress</when>
+          <when test="data.pagination.sort == 'toName'">toName</when>
+          <when test="data.pagination.sort == 'isNew'">isNew</when>
+          <when test="data.pagination.sort == 'sendTime'">sendTime</when>
+          <when test="data.pagination.sort == 'createTime'">createTime</when>
+          <when test="data.pagination.sort == 'needReply'">needReply</when>
+            <when test="data.pagination.sort == 'fromIp'">fromIp</when>
+            <when test="data.pagination.sort == 'isWarning'">isWarning</when>
+          <otherwise>
+            sendTime
+          </otherwise>
+        </choose>
+        <if test="data.pagination.order != null">
+          ${data.pagination.order}
+        </if>
+      </if>
+      <if test = "data.pagination.pageIndex != -1">
+        LIMIT #{offset},#{data.pagination.pageSize}
+      </if>
+  </select>
+
+    <select id="getEmailListCountByEntityValue" resultType="java.lang.Long">
+        select count(distinct(e.email_id))
+        FROM ea_email as e left join ea_email_entity t on e.email_id = t.email_id
+        <where>
+            <choose>
+                <when test="data.isExact == 1">
+                    t.entity_value = #{data.entityValue}
+                </when>
+                <when test="data.isExact == 0">
+                    t.entity_value LIKE CONCAT('%',#{data.entityValue},'%')
+                </when>
+            </choose>
+            <if test="data.caseId != null">
+                AND t.case_id = #{data.caseId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getEmailListByEntityValue" resultType="java.util.HashMap">
+        <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        SELECT
+        distinct(e.email_id) as emailId,
+        e.case_id as caseId,
+        e.email_subject as emailSubject,
+        e.from_address as fromAddress,
+        e.from_name as fromName,
+        e.to_address as toAddress,
+        e.to_name as toName,
+        e.from_ip as fromIp,
+        e.old_file_name as oldFileName,
+        e.new_file_name as newFileName,
+        DATE_FORMAT(e.send_time, "%Y-%m-%d %H:%i") as sendTime,
+        DATE_FORMAT(e.create_time, "%Y-%m-%d %H:%i") as createTime
+        FROM ea_email as e left join ea_email_entity t on e.email_id = t.email_id
+        <where>
+            <choose>
+                <when test="data.isExact == 1">
+                    t.entity_value = #{data.entityValue}
+                </when>
+                <when test="data.isExact == 0">
+                    t.entity_value LIKE CONCAT('%',#{data.entityValue},'%')
+                </when>
+            </choose>
+            <if test="data.caseId != null">
+                AND e.case_id = #{data.caseId}
+            </if>
+        </where>
+        <if test="data.pagination.sort != null">
+            ORDER BY
+            <choose>
+                <when test="data.pagination.sort == 'emailSubject'">emailSubject</when>
+                <when test="data.pagination.sort == 'caseId'">caseId</when>
+                <when test="data.pagination.sort == 'fromAddress'">fromAddress</when>
+                <when test="data.pagination.sort == 'fromName'">fromName</when>
+                <when test="data.pagination.sort == 'toAddress'">toAddress</when>
+                <when test="data.pagination.sort == 'toName'">toName</when>
+                <when test="data.pagination.sort == 'isNew'">isNew</when>
+                <when test="data.pagination.sort == 'sendTime'">sendTime</when>
+                <when test="data.pagination.sort == 'createTime'">createTime</when>
+                <when test="data.pagination.sort == 'needReply'">needReply</when>
+                <when test="data.pagination.sort == 'fromIp'">fromIp</when>
+                <otherwise>
+                    sendTime
+                </otherwise>
+            </choose>
+            <if test="data.pagination.order != null">
+                ${data.pagination.order}
+            </if>
+        </if>
+        <if test = "data.pagination.pageIndex != -1">
+            LIMIT #{offset},#{data.pagination.pageSize}
+        </if>
+    </select>
+
+
+    <select id="getEmailListCountByAccount" resultType="java.lang.Long">
+        select count(DISTINCT(email_id))
+        from ea_email_relation
+        <where>
+            <if test="data.caseId != null">
+              AND case_id = #{data.caseId}
+            </if>
+
+            <if test="data.account != null">
+                AND (from_address = #{data.account} or to_address = #{data.account})
+            </if>
+        </where>
+    </select>
+
+    <select id="getEmailListByAccount" resultType="java.util.HashMap">
+        <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        SELECT
+        email_id as emailId,
+        case_id as caseId,
+        email_subject as emailSubject,
+        from_address as fromAddress,
+        from_name as fromName,
+        to_address as toAddress,
+        to_name as toName,
+        from_ip as fromIp,
+        old_file_name as oldFileName,
+        new_file_name as newFileName,
+        DATE_FORMAT(send_time, "%Y-%m-%d %H:%i") as sendTime,
+        DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime
+        from ea_email
+        where email_id in (
+        select DISTINCT(email_id) from ea_email_relation
+        <where>
+            <if test="data.caseId != null">
+                AND case_id = #{data.caseId}
+            </if>
+
+            <if test="data.account != null">
+                AND (from_address = #{data.account} or to_address = #{data.account})
+            </if>
+        </where>
+        )
+        <if test="data.pagination.sort != null">
+            ORDER BY
+            <choose>
+                <when test="data.pagination.sort == 'emailSubject'">emailSubject</when>
+                <when test="data.pagination.sort == 'caseId'">caseId</when>
+                <when test="data.pagination.sort == 'fromAddress'">fromAddress</when>
+                <when test="data.pagination.sort == 'fromName'">fromName</when>
+                <when test="data.pagination.sort == 'toAddress'">toAddress</when>
+                <when test="data.pagination.sort == 'toName'">toName</when>
+                <when test="data.pagination.sort == 'isNew'">isNew</when>
+                <when test="data.pagination.sort == 'sendTime'">sendTime</when>
+                <when test="data.pagination.sort == 'createTime'">createTime</when>
+                <when test="data.pagination.sort == 'needReply'">needReply</when>
+                <when test="data.pagination.sort == 'fromIp'">fromIp</when>
+                <otherwise>
+                    sendTime
+                </otherwise>
+            </choose>
+            <if test="data.pagination.order != null">
+                ${data.pagination.order}
+            </if>
+        </if>
+        <if test = "data.pagination.pageIndex != -1">
+            LIMIT #{offset},#{data.pagination.pageSize}
+        </if>
+    </select>
+
+  <select id="getBasicInfo" resultType="java.util.HashMap">
+      SELECT
+      email_id as emailId,
+      case_id as caseId,
+      email_subject as emailSubject,
+      from_address as fromAddress,
+      from_name as fromName,
+      to_address as toAddress,
+      to_name as toName,
+      is_new as isNew,
+      DATE_FORMAT(send_time, "%Y-%m-%d %H:%i") as sendTime,
+      DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+      need_reply as needReply
+      FROM ea_email
+      <where>
+          email_id = #{emailId}
+      </where>
+  </select>
+
+    <select id="getContentInfo" resultType="java.util.HashMap">
+        SELECT
+        email_id as emailId,
+        case_id as caseId,
+        email_subject as emailSubject,
+        from_address as fromAddress,
+        from_name as fromName,
+        to_address as toAddress,
+        to_name as toName,
+        is_new as isNew,
+        DATE_FORMAT(send_time, "%Y-%m-%d %H:%i") as sendTime,
+        DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+        need_reply as needReply,
+        text_content as textContent,
+        html_content as htmlContent
+        FROM ea_email
+        <where>
+            email_id = #{emailId}
+        </where>
+    </select>
+
+    <select id="getGroupFromAddressCount" resultType="java.util.HashMap">
+        select count(*) as appearTime, from_name as nickName, from_address as address
+        from ea_email
+        <where>
+            <if test="caseId != null and caseId != 0">
+                case_id = #{caseId}
+            </if>
+        </where>
+        GROUP BY from_address
+    </select>
+    
+    <update id="updateWarningState">
+        update ea_email set is_warning = 1 where case_id = #{caseId} and email_id in (
+        select distinct(email_id) from ea_email_relation
+        where from_address in
+         <foreach
+                 collection="accounts" open="(" close=")" separator="," item="item">
+             #{item.address}
+         </foreach>
+          or to_address in
+         <foreach collection="accounts" open="(" close=")" separator="," item="item">
+             #{item.address}
+         </foreach>
+      )
+
+    </update>
+
+
+</mapper>

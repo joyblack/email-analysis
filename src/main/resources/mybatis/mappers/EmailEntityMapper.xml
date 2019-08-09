@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.EmailEntityMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.EmailEntity" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="email_id" property="emailId" jdbcType="BIGINT" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="attach_id" property="attachId" jdbcType="BIGINT" />
+    <result column="entity_value" property="entityValue" jdbcType="VARCHAR" />
+    <result column="entity_type" property="entityType" jdbcType="VARCHAR" />
+    <result column="appear_position" property="appearPosition" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, email_id, entity_value, entity_type, appear_position, case_id, attach_id
+  </sql>
+
+  <select id="getEntityListCount" resultType="java.lang.Long">
+    SELECT COUNT(*) FROM ( SELECT COUNT(*) FROM ea_email_entity
+    <where>
+      <if test="data.caseId != null">
+        AND case_id = #{data.caseId}
+      </if>
+      <if test="data.emailId != null">
+        AND email_id = #{data.emailId}
+      </if>
+      <if test="data.entities != null">
+        AND
+        <foreach collection="data.entities" index="index" item="item" open="(" close=")">
+          <if test="index != 0">
+            OR
+          </if>
+          <choose>
+            <when test="item.entityType != null">
+              (entity_type = #{item.entityType}
+              <if test="item.entityValue != null">
+                AND entity_value LIKE CONCAT ('%', #{item.entityValue}, '%')
+              </if>
+              )
+            </when>
+            <when test="item.entityType == null">
+              <if test="item.entityValue != null">
+                (entity_value LIKE CONCAT ('%', #{item.entityValue}, '%'))
+              </if>
+            </when>
+          </choose>
+        </foreach>
+      </if>
+    </where>
+    GROUP BY entity_value) as t
+  </select>
+
+  <select id="getEntityList" resultType="java.util.HashMap">
+    <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+    SELECT
+      entity_type AS entityType,
+      entity_value AS entityValue,
+      count(entity_value) as appearCount
+      FROM ea_email_entity
+      <where>
+        <if test="data.caseId != null">
+          AND case_id = #{data.caseId}
+        </if>
+        <if test="data.emailId != null">
+          AND email_id = #{data.emailId}
+        </if>
+        <if test="data.entities != null">
+          AND
+          <foreach collection="data.entities" index="index" item="item" open="(" close=")">
+              <if test="index != 0">
+                   OR
+              </if>
+           <choose>
+                <when test="item.entityType != null">
+                  (entity_type = #{item.entityType}
+                      <if test="item.entityValue != null">
+                        AND entity_value LIKE CONCAT ('%', #{item.entityValue}, '%')
+                      </if>
+                  )
+                </when>
+                <when test="item.entityType == null">
+                  <if test="item.entityValue != null">
+                    (entity_value LIKE CONCAT ('%', #{item.entityValue}, '%'))
+                  </if>
+                </when>
+              </choose>
+          </foreach>
+        </if>
+      </where>
+      GROUP BY entityValue
+    <if test="data.pagination.sort != null">
+      ORDER BY
+      <choose>
+        <when test="data.pagination.sort == 'entityType'">entityType</when>
+        <when test="data.pagination.sort == 'entityValue'">entityValue</when>
+        <otherwise>
+          entityType
+        </otherwise>
+      </choose>
+      <if test="data.pagination.order != null">
+        ${data.pagination.order}
+      </if>
+    </if>
+    <if test = "data.pagination.pageIndex != -1">
+      LIMIT #{offset},#{data.pagination.pageSize}
+    </if>
+  </select>
+
+  <select id="getAttachEditEntities" resultType="java.util.HashMap">
+    SELECT
+    id AS id,
+    email_id AS emailId,
+    attach_id AS attachId,
+    entity_type AS entityType,
+    entity_value AS entityValue,
+    appear_position AS appearPosition,
+    case_id AS caseId
+    FROM ea_email_entity
+    <where>
+      attach_id = #{attachId} AND appear_position = 3
+    </where>
+  </select>
+
+  <insert id="batchInsert" parameterType="java.util.List">
+    insert into ea_email_entity (id, email_id, entity_value, entity_type, appear_position, case_id, attach_id) values
+    <foreach collection="data" item="item" index="index" separator=",">
+      (#{item.id},#{item.emailId},#{item.entityValue},#{item.entityType},#{item.appearPosition},#{item.caseId},#{item.attachId})
+    </foreach>
+  </insert>
+
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.EmailRelationMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.EmailRelation" >
+    <id column="relation_id" property="relationId" jdbcType="BIGINT" />
+    <result column="email_id" property="emailId" jdbcType="BIGINT" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="from_name" property="fromName" jdbcType="VARCHAR" />
+    <result column="from_address" property="fromAddress" jdbcType="VARCHAR" />
+    <result column="to_name" property="toName" jdbcType="VARCHAR" />
+    <result column="to_address" property="toAddress" jdbcType="VARCHAR" />
+    <result column="send_time" property="sendTime" jdbcType="TIMESTAMP" />
+    <result column="send_type" property="sendType" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    relation_id, case_id, email_id, from_name, from_address, to_name, to_address, send_time, send_type
+  </sql>
+
+
+  <select id="getGroupToAddressCount" resultType="java.util.HashMap">
+    select count(*) as appearTime, to_name as nickName, to_address as address
+    from ea_email_relation
+    <where>
+       send_type = "TO"
+      <if test="caseId != null and caseId != 0">
+        AND case_id = #{caseId}
+      </if>
+    </where>
+    GROUP BY to_address
+  </select>
+
+  <select id="getGroupCcAddressCount" resultType="java.util.HashMap">
+    select count(*) as appearTime, to_name as nickName, to_address as address
+    from ea_email_relation
+    <where>
+      send_type = "CC"
+      <if test="caseId != null and caseId != 0">
+        case_id = #{caseId}
+      </if>
+    </where>
+    GROUP BY to_address
+  </select>
+</mapper>

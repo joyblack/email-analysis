@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.EmailAttachMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.EmailAttach" >
+    <id column="attach_id" property="attachId" jdbcType="BIGINT" />
+    <result column="email_id" property="emailId" jdbcType="BIGINT" />
+    <result column="case_id" property="case_id" jdbcType="BIGINT" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="store_path" property="storePath" jdbcType="VARCHAR" />
+    <result column="file_size" property="fileSize" jdbcType="BIGINT" />
+    <result column="file_type" property="fileType" jdbcType="VARCHAR" />
+    <result column="file_md5" property="fileMd5" jdbcType="VARCHAR" />
+    <result column="file_protocol" property="fileProtocol" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    attach_id, email_id, file_name, store_path, file_size, file_type, file_md5, file_protocol, case_id
+  </sql>
+
+  <select id="getAttachListCount" resultType="java.lang.Long">
+    SELECT count(*) FROM ea_email_attach
+    <where>
+      <if test="data.fileName != null and data.fileName != ''">
+        file_name like CONCAT ('%', #{data.fileName}, '%')
+      </if>
+      <if test="data.caseId != null and data.caseId != 0">
+        AND case_id = #{data.caseId}
+      </if>
+      <choose>
+        <when test="data.include == -1"></when>
+        <when test="data.include == 0">
+            AND file_type not in
+          <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+               #{item}
+          </foreach>
+        </when>
+        <when test="data.include == 1">
+          AND file_type in
+          <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+        </when>
+      </choose>
+    </where>
+  </select>
+
+  <select id="getAttachList" resultType="java.util.HashMap">
+    <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+    SELECT
+    attach_id as attachId,
+    email_id as emailId,
+    case_id as caseId,
+    file_name as fileName,
+    store_path as storePath,
+    file_size as fileSize,
+    file_type as fileType,
+    file_md5 as fileMd5,
+    file_protocol as fileProtocol
+    FROM ea_email_attach
+    <where>
+      <if test="data.fileName != null and data.fileName != ''">
+        file_name like CONCAT ('%', #{data.fileName}, '%')
+      </if>
+      <if test="data.caseId != null and data.caseId != 0">
+        AND case_id = #{data.caseId}
+      </if>
+      <choose>
+        <when test="data.include == -1"></when>
+        <when test="data.include == 0">
+          AND file_type not in
+          <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+        </when>
+        <when test="data.include == 1">
+          AND file_type in
+          <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+        </when>
+      </choose>
+    </where>
+    <if test="data.pagination.sort != null">
+      ORDER BY
+      <choose>
+        <when test="data.pagination.sort == 'caseId'">caseId</when>
+        <when test="data.pagination.sort == 'fileName'">fileName</when>
+        <when test="data.pagination.sort == 'emailId'">emailId</when>
+        <when test="data.pagination.sort == 'fileSize'">fileSize</when>
+        <when test="data.pagination.sort == 'fileType'">fileType</when>
+        <otherwise>
+          fileType
+        </otherwise>
+      </choose>
+      <if test="data.pagination.order != null">
+        ${data.pagination.order}
+      </if>
+    </if>
+    <if test = "data.pagination.pageIndex != -1">
+      LIMIT #{offset},#{data.pagination.pageSize}
+    </if>
+  </select>
+
+  <select id="getEmailAttach" resultType="java.util.HashMap">
+      SELECT
+        attach_id as attachId,
+        email_id as emailId,
+        case_id as caseId,
+        file_name as fileName,
+        store_path as storePath,
+        file_size as fileSize,
+        file_type as fileType,
+        file_md5 as fileMd5,
+        file_protocol as fileProtocol
+      FROM ea_email_attach
+      <where>
+        email_id = #{emailId}
+      </where>
+  </select>
+
+  <select id="getAttach" resultType="java.util.HashMap">
+    SELECT
+    attach_id as attachId,
+    email_id as emailId,
+    case_id as caseId,
+    file_name as fileName,
+    store_path as storePath,
+    file_size as fileSize,
+    file_type as fileType,
+    file_md5 as fileMd5,
+    file_protocol as fileProtocol
+    FROM ea_email_attach
+    <where>
+      attach_id = #{attachId}
+    </where>
+  </select>
+
+  <select id="getGroupTypeCount" resultType="java.util.HashMap">
+    select count(*) as appearTime, file_type as fileType
+    from ea_email_attach
+    <where>
+      <if test="caseId != null and caseId != 0">
+        case_id = #{caseId}
+      </if>
+    </where>
+    GROUP BY fileType
+  </select>
+
+</mapper>

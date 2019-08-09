@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.AccountMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.Account" >
+    <id column="account_id" property="accountId" jdbcType="BIGINT" />
+    <result column="nick_name" property="nickName" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="domain_name" property="domainName" jdbcType="VARCHAR" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    account_id, nick_name, address, domain_name, case_id
+  </sql>
+  <delete id="clearCaseInfo" parameterType="java.lang.Long" >
+    delete from ea_account
+    where case_id = #{caseId}
+  </delete>
+
+  <select id="getAccountByRelation" resultType="java.util.HashMap">
+      select
+      DISTINCT(from_address) as address
+      from ea_email_relation
+      <where>
+        <if test="caseId != null || caseId != 0">
+          case_id = #{caseId}
+        </if>
+      </where>
+      UNION
+      select DISTINCT(to_address) as address from ea_email_relation
+        <where>
+        <if test="caseId != null || caseId != 0">
+          case_id = #{caseId}
+        </if>
+      </where>
+  </select>
+
+
+    <!-- query basic -->
+    <select id="getAccountListCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ea_account
+        <where>
+            <if test="data.caseId != null">
+                AND case_id = #{data.caseId}
+            </if>
+            <if test="data.domainName != null">
+                AND domain_name = #{data.domainName}
+            </if>
+            <if test="data.keyword != null">
+                AND address LIKE CONCAT('%',#{data.keyword},'%')
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getAccountList" resultType="java.util.HashMap">
+        <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        SELECT account_id as accountId,
+        nick_name as nickName,
+        address as address,
+        domain_name as domainName,
+        case_id as caseId
+        FROM ea_account
+        <where>
+            <if test="data.caseId != null">
+                AND case_id = #{data.caseId}
+            </if>
+            <if test="data.domainName != null">
+                AND domain_name = #{data.domainName}
+            </if>
+            <if test="data.keyword != null">
+                AND address LIKE CONCAT('%',#{data.keyword},'%')
+            </if>
+        </where>
+        <if test="data.pagination.sort != null">
+            ORDER BY
+            <choose>
+                <when test="data.pagination.sort == 'domainName'">domainName</when>
+                <when test="data.pagination.sort == 'caseId'">caseId</when>
+                <when test="data.pagination.sort == 'address'">address</when>
+                <when test="data.pagination.sort == 'nickName'">nickName</when>
+                <otherwise>
+                    accountId
+                </otherwise>
+            </choose>
+            <if test="data.pagination.order != null">
+                ${data.pagination.order}
+            </if>
+        </if>
+        <if test = "data.pagination.pageIndex != -1">
+            LIMIT #{offset},#{data.pagination.pageSize}
+        </if>
+    </select>
+
+
+</mapper>

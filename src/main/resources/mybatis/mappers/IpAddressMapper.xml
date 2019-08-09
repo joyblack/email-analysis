@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.IpAddressMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.IpAddress" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="start_ip" property="startIp" jdbcType="VARCHAR" />
+    <result column="end_ip" property="endIp" jdbcType="VARCHAR" />
+    <result column="address1" property="address1" jdbcType="VARCHAR" />
+    <result column="address2" property="address2" jdbcType="VARCHAR" />
+    <result column="start_ip_value" property="startIpValue" jdbcType="BIGINT" />
+    <result column="end_ip_value" property="endIpValue" jdbcType="BIGINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, start_ip, end_ip, address1, address2, start_ip_value, end_ip_value
+  </sql>
+
+  <select id="getIpAddress" resultType="com.sunrun.emailanalysis.po.IpAddress">
+      select * from ea_ip_address
+      <where>
+          #{ipValue} &gt;= start_ip_value and #{ipValue} &lt;= end_ip_value
+      </where>
+      limit 1;
+  </select>
+
+</mapper>

@@ -1,0 +1,31 @@
+# 服务器运行的端口号
+server:
+  port: 8888
+
+spring:
+  # 数据库配置
+  datasource:
+    ## 数据库的账户名
+    username: root
+    ## 数据库的密码
+    password: sunrunvas
+    ## 数据库地址，修改IP部分即可
+    url: jdbc:mysql://192.168.0.31:3306/email_analysis?characterEncoding=utf8&serverTimezone=GMT
+    #url: jdbc:mysql://127.0.0.1:3306/email_analysis?characterEncoding=utf8&serverTimezone=GMT
+    #url: jdbc:mysql://192.168.0.62:3306/email_analysis?characterEncoding=utf8&serverTimezone=GMT
+    ## 无需修改
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#################################################################
+# [Warning] 以下部分不允许手工修改，只允许开发人员调试使用
+# mybatis映射文件
+mybatis:
+  mapper-locations: classpath:mybatis/mappers/*.xml
+
+# 线程池环境配置
+task:
+  pool:
+    corePoolSize: 16
+    maxPoolSize: 32
+    keepAliveSeconds: 300
+    #queueCapacity: 8

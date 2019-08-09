@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.CustomDictionaryMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.CustomDictionary" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="value" property="value" jdbcType="VARCHAR" />
+    <result column="nature" property="nature" jdbcType="VARCHAR" />
+    <result column="frequency" property="frequency" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, value, nature, frequency, create_time
+  </sql>
+
+  <select id="getCustomDictionaryById" resultType="java.util.HashMap">
+    SELECT id as id,
+    value as value,
+    nature as nature,
+    frequency as frequency,
+    DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime
+    FROM ea_custom_dictionary
+    <where>
+      id = #{id}
+    </where>
+  </select>
+
+  <select id="getCustomDictionaryListCount" resultType="java.lang.Long">
+    SELECT COUNT(*)
+    FROM ea_custom_dictionary
+    <where>
+      <if test="data.keyword != null">
+        AND value like CONCAT('%',#{data.keyword},'%')
+      </if>
+    </where>
+  </select>
+
+  <select id="getCustomDictionaryList" resultType="java.util.HashMap">
+    <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+    SELECT id as id,
+    value as value,
+    nature as nature,
+    frequency as frequency,
+    DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime
+    FROM ea_custom_dictionary
+    <where>
+      <if test="data.keyword != null">
+        AND value like CONCAT('%',#{data.keyword},'%')
+      </if>
+    </where>
+    <if test="data.pagination.sort != null">
+      ORDER BY
+      <choose>
+        <when test="data.pagination.sort == 'id'">id</when>
+        <when test="data.pagination.sort == 'value'">value</when>
+        <when test="data.pagination.sort == 'nature'">nature</when>
+        <when test="data.pagination.sort == 'frequency'">frequency</when>
+        <otherwise>
+          id
+        </otherwise>
+      </choose>
+      <if test="data.pagination.order != null">
+        ${data.pagination.order}
+      </if>
+    </if>
+    <if test = "data.pagination.pageIndex != -1">
+      LIMIT #{offset},#{data.pagination.pageSize}
+    </if>
+  </select>
+
+  <update id="clear">
+      delete from ea_custom_dictionary;
+  </update>
+
+</mapper>

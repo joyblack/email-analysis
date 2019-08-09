@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sunrun.emailanalysis.mapper.WarningAccountMapper">
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.WarningAccount">
+    <id column="account_id" jdbcType="BIGINT" property="accountId" />
+    <result column="nick_name" jdbcType="VARCHAR" property="nickName" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="domain_name" jdbcType="VARCHAR" property="domainName" />
+    <result column="state" jdbcType="INTEGER" property="state" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    account_id, nick_name, address, edit_time, create_time, domain_name, state
+  </sql>
+
+  <select id="getWarningAccount" resultType="java.util.HashMap">
+      select account_id as accountId,
+      nick_name as nickName,
+      address as address,
+      DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+      DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+      domain_name as domainName,
+      state as state
+      from ea_warning_account
+      where account_id = #{accountId}
+  </select>
+
+
+    <!-- query basic -->
+    <select id="getAccountListCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ea_warning_account
+        <where>
+            <if test="data.keyword != null">
+               address like CONCAT('%',#{data.keyword},'%') or nick_name like CONCAT('%',#{data.keyword},'%')
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getAccountList" resultType="java.util.HashMap">
+        <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        select account_id as accountId,
+        nick_name as nickName,
+        address as address,
+        DATE_FORMAT(create_time, "%Y-%m-%d %H:%i") as createTime,
+        DATE_FORMAT(edit_time, "%Y-%m-%d %H:%i") as editTime,
+        domain_name as domainName,
+        state as state
+        FROM ea_warning_account
+        <where>
+            <if test="data.keyword != null">
+                address like CONCAT('%',#{data.keyword},'%') or nick_name like CONCAT('%',#{data.keyword},'%')
+            </if>
+        </where>
+        <if test="data.pagination.sort != null">
+            ORDER BY
+            <choose>
+                <when test="data.pagination.sort == 'accountId'">accountId</when>
+                <when test="data.pagination.sort == 'domainName'">domainName</when>
+                <when test="data.pagination.sort == 'nickName'">nickName</when>
+                <when test="data.pagination.sort == 'createTime'">createTime</when>
+                <when test="data.pagination.sort == 'editTime'">editTime</when>
+                <otherwise>
+                    createTime
+                </otherwise>
+            </choose>
+            <if test="data.pagination.order != null">
+                ${data.pagination.order}
+            </if>
+        </if>
+        <if test = "data.pagination.pageIndex != -1">
+            LIMIT #{offset},#{data.pagination.pageSize}
+        </if>
+    </select>
+
+    <update id="setState">
+        update ea_warning_account
+        set state = #{state}
+        <where>
+            account_id in
+            <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="getAccountListByState" resultType="com.sunrun.emailanalysis.po.WarningAccount">
+        select * from ea_warning_account where state = #{state}
+    </select>
+
+
+</mapper>

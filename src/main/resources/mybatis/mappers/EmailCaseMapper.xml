@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.EmailCaseMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.EmailCase" >
+    <id column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="case_name" property="caseName" jdbcType="VARCHAR" />
+    <result column="case_type" property="caseType" jdbcType="INTEGER" />
+    <result column="case_code" property="caseCode" jdbcType="VARCHAR" />
+    <result column="state" property="state" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="edit_time" property="editTime" jdbcType="TIMESTAMP" />
+    <result column="create_id" property="createId" jdbcType="BIGINT" />
+    <result column="total_email" property="totalEmail" jdbcType="BIGINT" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="index_path" property="indexPath" jdbcType="VARCHAR" />
+    <result column="attach_path" property="attachPath" jdbcType="VARCHAR" />
+    <result column="email_path" property="emailPath" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    case_id, case_name, case_type, case_code, state, create_time, edit_time, create_id, index_path, attach_path, email_path, protocol,
+    remark,total_email
+  </sql>
+
+  <select id="getEmailTotal" resultType="java.lang.Long">
+    SELECT sum(total_email) FROM ea_email_case
+    <where>
+      <if test="caseId != null and caseId != 0">
+        case_id = #{caseId}
+      </if>
+    </where>
+  </select>
+
+  <select id="getCaseTotal" resultType="java.lang.Long">
+    SELECT count(*) FROM ea_email_case
+  </select>
+
+
+  <select id="getCaseListTotal" resultType="java.lang.Long">
+    SELECT count(*) FROM ea_email_case
+    <where>
+      <if test="data.keyword != null and data.keyword != ''">
+        case_name LIKE CONCAT ('%', #{data.keyword}, '%')
+      </if>
+    </where>
+  </select>
+
+  <select id="getNewestCase" resultType="com.sunrun.emailanalysis.po.EmailCase">
+    SELECT * FROM ea_email_case ORDER BY edit_time DESC limit 1;
+  </select>
+
+
+
+
+  <select id="getCaseList" resultType="java.util.HashMap">
+    <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+    SELECT
+    case_id as caseId,
+    case_name as caseName,
+    case_type as caseType,
+    case_code as caseCode,
+    state as state,
+    DATE_FORMAT(create_time, "%Y-%m-%d %H:%i:%s") as createTime,
+    DATE_FORMAT(edit_time, "%Y-%m-%d %H:%i:%s") as editTime,
+    create_id as createId,
+    remark as remark,
+    total_email as totalEmail
+    FROM ea_email_case
+    <where>
+      <if test="data.keyword != null and data.keyword != ''">
+        case_name like CONCAT ('%', #{data.keyword}, '%')
+      </if>
+    </where>
+
+    <if test="data.pagination.sort != null">
+      ORDER BY
+      <choose>
+        <when test="data.pagination.sort == 'caseId'">caseId</when>
+        <when test="data.pagination.sort == 'caseName'">caseName</when>
+        <when test="data.pagination.sort == 'createTime'">createTime</when>
+        <otherwise>
+          createTime
+        </otherwise>
+      </choose>
+      <if test="data.pagination.order != null">
+        ${data.pagination.order}
+      </if>
+    </if>
+    <if test = "data.pagination.pageIndex != -1">
+      LIMIT #{offset},#{data.pagination.pageSize}
+    </if>
+  </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.StatisticAttachMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.StatisticAttach" >
+    <id column="statistic_id" property="statisticId" jdbcType="BIGINT" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="appear_time" property="appearTime" jdbcType="BIGINT" />
+    <result column="extension" property="extension" jdbcType="VARCHAR" />
+    <result column="case_update_time" property="caseUpdateTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    statistic_id, case_id, extension, case_update_time, appear_time
+  </sql>
+
+  <select id="getSingleByCaseId" resultType="com.sunrun.emailanalysis.po.StatisticAttach">
+      select * from ea_statistic_attach
+      where case_id = #{caseId} limit 1
+  </select>
+
+  <select id="statisticAttachType" resultType="java.lang.Long">
+      select sum(appear_time) from ea_statistic_attach
+      <where>
+        case_id = #{caseId}
+        <choose>
+          <when test="include == -1"></when>
+          <when test="include == 0">
+            AND extension not in
+            <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+              #{item}
+            </foreach>
+          </when>
+          <when test="include == 1">
+            AND extension in
+            <foreach collection="extensionList" index="index" item="item" open="(" separator="," close=")">
+              #{item}
+            </foreach>
+          </when>
+        </choose>
+      </where>
+  </select>
+
+
+
+</mapper>

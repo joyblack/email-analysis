@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunrun.emailanalysis.mapper.StatisticRelationMapper" >
+  <resultMap id="BaseResultMap" type="com.sunrun.emailanalysis.po.StatisticRelation" >
+    <id column="statistic_id" property="statisticId" jdbcType="BIGINT" />
+    <result column="case_id" property="caseId" jdbcType="BIGINT" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="nick_name" property="nickName" jdbcType="VARCHAR" />
+    <result column="send_type" property="sendType" jdbcType="VARCHAR" />
+    <result column="appear_time" property="appearTime" jdbcType="BIGINT" />
+    <result column="case_update_time" property="caseUpdateTime" jdbcType="TIMESTAMP" />
+    <result column="domain_name" property="domainName" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    statistic_id, case_id, address, nick_name, appear_time, case_update_time, send_type, domain_name
+  </sql>
+
+  <select id="getDomainList" resultType="java.util.HashMap">
+      select count(*) as address_count, domain_name as domainName from ea_statistic_relation
+      <where>
+        <if test="caseId != null">
+          case_id = #{caseId}
+        </if>
+      </where>
+  </select>
+
+
+
+  <select id="getSingleByCaseId" resultType="com.sunrun.emailanalysis.po.StatisticRelation">
+      select * from ea_statistic_relation
+      where case_id = #{caseId} limit 1
+  </select>
+
+  <select id="getStatisticRelationList" resultType="java.util.HashMap">
+      <bind name="offset" value="(data.pagination.pageIndex * data.pagination.pageSize) + data.pagination.shift"></bind>
+        select
+        case_id as caseId,
+        address as address,
+        nick_name as nickName,
+        appear_time as appearTime
+        FROM ea_statistic_relation
+        <where>
+          send_type = #{data.sendType}
+          <if test="data.caseId != null and data.caseId != 0">
+            AND case_id = #{data.caseId}
+          </if>
+          <if test="data.keyword != null and data.keyword != ''">
+            <choose>
+              <when test="data.isExact == 1">
+                AND (nick_name = #{data.keyword} or address = #{data.keyword})
+              </when>
+              <otherwise>
+                AND (nick_name LIKE CONCAT('%',#{data.keyword},'%') or address like CONCAT('%',#{data.keyword},'%'))
+              </otherwise>
+            </choose>
+          </if>
+        </where>
+        <choose>
+          <when test="data.pagination.sort == null">
+            ORDER BY appearTime DESC
+          </when>
+            <when test="data.pagination.sort != null">
+              ORDER BY
+              <choose>
+                <when test="data.pagination.sort == 'nickName'">nname</when>
+                <when test="data.pagination.sort == 'address'">address</when>
+                <when test="data.pagination.sort == 'appearTime'">appearTime</when>
+                <otherwise>
+                  appearTime
+                </otherwise>
+              </choose>
+              <if test="data.pagination.order != null">
+                ${data.pagination.order}
+              </if>
+            </when>
+        </choose>
+      <if test = "data.pagination.pageIndex != -1">
+        LIMIT #{offset},#{data.pagination.pageSize}
+      </if>
+  </select>
+
+
+  <select id="getStatisticRelationListCount" resultType="java.lang.Long">
+    select count(*)
+    FROM ea_statistic_relation
+    <where>
+      send_type = #{data.sendType}
+      <if test="data.caseId != null and data.caseId != 0">
+        AND case_id = #{data.caseId}
+      </if>
+      <if test="data.keyword != null and data.keyword != ''">
+        <choose>
+          <when test="data.isExact == 1">
+            AND (nick_name = #{data.keyword} or address = #{data.keyword})
+          </when>
+          <otherwise>
+            AND (nick_name LIKE CONCAT('%',#{data.keyword},'%') or address like CONCAT('%',#{data.keyword},'%'))
+          </otherwise>
+        </choose>
+      </if>
+    </where>
+  </select>
+
+  <select id="getStatisticRelationTotal" resultType="java.lang.Long">
+    select sum(appear_time)
+    FROM ea_statistic_relation
+    <where>
+      send_type = #{data.sendType}
+      <if test="data.caseId != null and data.caseId != 0">
+        AND case_id = #{data.caseId}
+      </if>
+      <if test="data.keyword != null and data.keyword != ''">
+        <choose>
+          <when test="data.isExact == 1">
+            AND (nick_name = #{data.keyword} or address = #{data.keyword})
+          </when>
+          <otherwise>
+            AND (nick_name LIKE CONCAT('%',#{data.keyword},'%') or address like CONCAT('%',#{data.keyword},'%'))
+          </otherwise>
+        </choose>
+      </if>
+    </where>
+  </select>
+
+</mapper>
